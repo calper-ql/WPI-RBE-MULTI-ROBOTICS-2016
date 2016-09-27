@@ -46,7 +46,7 @@ public:
 			cout << "Unable to open " << port << endl;
 		}else{
 			files.push_back(fd);
-			set_interface_attribs(fd, B9600, 0);
+			set_interface_attribs(fd, B115200, 0);
 			set_blocking(fd, 0);
 		}
 	}

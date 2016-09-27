@@ -4,10 +4,10 @@
 #include "UTIL_SRC/FieldComputer.hpp"
 
 #define PI 3.1415926535
-#define ALLOWED_ANGLE_ERROR 5
+#define ALLOWED_ANGLE_ERROR 1
 
 // Allowed distance from target is in pixels.
-#define ALLOWED_DISTANCE 5
+#define ALLOWED_DISTANCE 10
 
 using namespace std;
 
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     while(!target_reached){
         Robot robot = getRobot(id, fc);
         if(robot.id() == id){
-            PID pid(0.01, 0.001, 0.0);
+            PID pid(0.01, 0.005, 0.00005);
             while(true){
                 robot = getRobot(id, fc);
                 if(robot.id() == id){
