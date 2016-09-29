@@ -3,7 +3,9 @@ This is a repository for the WPI Multi Robotics course's labs and fields
 
 We use OpenCV to track ARUCO codes in the field.
 To build opencv in your system please run the install script by:
+```
 ./installopencv.sh
+```
 
 If you are using ubuntu, make sure to install all the dependencies.
 To do so run:
