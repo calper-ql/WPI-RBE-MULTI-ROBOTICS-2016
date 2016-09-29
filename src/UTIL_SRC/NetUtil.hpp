@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <time.h>
+#include <string.h>
 
 #define PORT 30123
 
