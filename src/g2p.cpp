@@ -4,7 +4,7 @@
 #include "UTIL_SRC/FieldComputer.hpp"
 
 #define PI 3.1415926535
-#define ALLOWED_ANGLE_ERROR 1
+#define ALLOWED_ANGLE_ERROR 3
 
 // Allowed distance from target is in pixels.
 #define ALLOWED_DISTANCE 10
