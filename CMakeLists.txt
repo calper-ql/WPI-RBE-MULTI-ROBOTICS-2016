@@ -30,6 +30,7 @@ add_executable(rbe_server ${SOURCES} ${PROJECT_SOURCE_DIR}/src/rbe_server.cpp)
 add_executable(rbe_test_client ${SOURCES} ${PROJECT_SOURCE_DIR}/src/rbe_test_client.cpp)
 add_executable(g2p ${SOURCES} ${PROJECT_SOURCE_DIR}/src/g2p.cpp)
 add_executable(multithread_lab1 ${SOURCES} ${PROJECT_SOURCE_DIR}/src/multithread_lab1.cpp)
+add_executable(rbe_scan ${SOURCES} ${PROJECT_SOURCE_DIR}/src/rbe_scan.cpp)
 
 target_link_libraries (rbe_server ${OpenCV_LIBS})
 target_link_libraries (rbe_server ${CMAKE_THREAD_LIBS_INIT})
