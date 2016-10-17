@@ -15,20 +15,15 @@ endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
-file(GLOB SOURCES
-	"${PROJECT_SOURCE_DIR}/src/UTIL_SRC/*.cpp"
-	"${PROJECT_SOURCE_DIR}/src/UTIL_SRC/*.hpp"
-)
-
 find_package (Threads)
 find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY})
 
-add_executable(rbe_server ${SOURCES} ${PROJECT_SOURCE_DIR}/src/rbe_server.cpp)
-add_executable(rbe_test_client ${SOURCES} ${PROJECT_SOURCE_DIR}/src/rbe_test_client.cpp)
-add_executable(g2p ${SOURCES} ${PROJECT_SOURCE_DIR}/src/g2p.cpp)
+add_executable(rbe_server ${PROJECT_SOURCE_DIR}/src/rbe_server.cpp)
+add_executable(rbe_test_client ${PROJECT_SOURCE_DIR}/src/rbe_test_client.cpp)
+add_executable(g2p ${PROJECT_SOURCE_DIR}/src/g2p.cpp)
 
 target_link_libraries (rbe_server ${OpenCV_LIBS})
 target_link_libraries (rbe_server ${CMAKE_THREAD_LIBS_INIT})

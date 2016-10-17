@@ -8,9 +8,7 @@
 #include <opencv2/aruco.hpp>
 #include <sys/socket.h>
 
-#include "UTIL_SRC/Entity.hpp"
-#include "UTIL_SRC/Robot.hpp"
-#include "UTIL_SRC/NetUtil.hpp"
+#include "rbe510.hpp"
 
 #include <fcntl.h>
 #include <string.h>
