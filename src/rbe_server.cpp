@@ -180,6 +180,21 @@ void attendClient(int connfd, vector<Robot> robots, vector<Entity> entities){
 			send_buffer.append("\n");
 		}
 		write(connfd, send_buffer.c_str(), send_buffer.size());
+	}else if(receive_buffer.compare("GRIPPER") == 0){
+		receive_buffer = NetUtil::readFromSocket(connfd);
+		stringstream parser(receive_buffer);
+		int id;
+		float open;
+		parser >> id >> open;
+		if (!parser.fail()){
+			cout << ipstr << ":" << port << " requested to adjust gripper"
+			<< " id: " << id
+			<< " open: " << open
+			<< endl;
+		}
+		stringstream deconstructor;
+		deconstructor << id << " - " << open << "\n";
+		blue.queue(deconstructor.str());
 	}
 	close(connfd);
 }

@@ -77,12 +77,22 @@ void loop() {
     char speedbuf[32];
     char swaybuf[32];
     sscanf(inc_data, "%i %s %s", &id, &speedbuf, &swaybuf);
-    float speed = atof(speedbuf);
-    float sway = atof(swaybuf);
-    if (id == ID) arcadeDrive(speed, sway);
+
+    if(speedbuf[0] == '-'){
+      float open = atof(swaybuf);
+      if(open > 0.5){
+        sparki.gripperOpen();
+      }else{
+        sparki.gripperClose();
+      }
+      
+    }else{
+      float speed = atof(speedbuf);
+      float sway = atof(swaybuf);
+      if (id == ID) arcadeDrive(speed, sway);
+    }
     list_end = 0;
     started = false;
   }
 
 }
-

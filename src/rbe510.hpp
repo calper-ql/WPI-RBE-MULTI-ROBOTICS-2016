@@ -92,6 +92,8 @@ public:
 	FieldComputer(std::string ip);
 	FieldData getFieldData();
 	void arcadeDrive(int id, float speed, float sway);
+  void openGripper(int id);
+  void closeGripper(int id);
 	void enableVerbose();
 	void disableVerbose();
 };
@@ -267,6 +269,44 @@ void FieldComputer::arcadeDrive(int id, float speed, float sway){
 	close(sockfd);
 	if(verbose)std::cout << "Requested to drive id: "
 	<< id << " with speed: " << speed << " and sway: " << sway << std::endl;
+}
+
+void FieldComputer::openGripper(int id){
+	int sockfd = NetUtil::getClientSocket(ip.c_str());
+	if (sockfd < 0) {
+		if(verbose)std::cout << "FieldComputer could not be reached..." << std::endl;
+		return;
+	}
+	std::stringstream strStream;
+	std::string send_buffer = "GRIPPER\n";
+	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	send_buffer.clear();
+	strStream << id << " ";
+	strStream << "1.0";
+	send_buffer = strStream.str();
+	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	close(sockfd);
+	if(verbose)std::cout << "Requested to open gripper id: "
+	<< id << std::endl;
+}
+
+void FieldComputer::closeGripper(int id){
+	int sockfd = NetUtil::getClientSocket(ip.c_str());
+	if (sockfd < 0) {
+		if(verbose)std::cout << "FieldComputer could not be reached..." << std::endl;
+		return;
+	}
+	std::stringstream strStream;
+	std::string send_buffer = "GRIPPER\n";
+	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	send_buffer.clear();
+	strStream << id << " ";
+	strStream << "0.0";
+	send_buffer = strStream.str();
+	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	close(sockfd);
+	if(verbose)std::cout << "Requested to open gripper id: "
+	<< id << std::endl;
 }
 
 void FieldComputer::enableVerbose(){
