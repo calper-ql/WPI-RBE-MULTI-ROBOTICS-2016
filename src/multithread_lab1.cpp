@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     cout << "Slope: " << slopeSign << endl;
 
 
-    //This is supposed to be for the triangulation/isolation of x and y offsets, not working too well though.
+    //This is for the triangulation/isolation of x and y offsets
 
     int target1_x0 = (offset * sin(d2r(theta)) * slopeSign);
     int target1_y0 = (offset * cos(d2r(theta)) * slopeSign);
@@ -103,17 +103,19 @@ int main(int argc, char *argv[])
         target2_y0 = - target2_y0;
     }
 
+    int direction = 1;
+
     cout << "Offsets:" << endl;
     cout << "target1_x0 " << target1_x0 << endl;
     cout << "target1_y0 " << target1_y0 << endl;
     cout << "target2_x0 " << target2_x0 << endl;
     cout << "target2_y0 " << target2_y0 << endl;
 
-    targetX1 = targetX1 - target1_x0;
-    targetY1 = targetY1 - target1_y0;
+    targetX1 = targetX1 + direction * target1_x0;
+    targetY1 = targetY1 + direction * target1_y0;
 
-    targetX2 = targetX2 - target2_x0;
-    targetY2 = targetY2 - target2_y0;
+    targetX2 = targetX2 + direction * target2_x0;
+    targetY2 = targetY2 + direction * target2_y0;
 
     cout << "Recalculating..." << endl;
     cout << "Theta: " << theta << endl;
@@ -183,11 +185,11 @@ int main(int argc, char *argv[])
                       cout << "height: " << data.robots[i].height() << endl;
                   }
 
-                  targetX1 = targetX1 + 2.0 * target1_x0;
-                  targetY1 = targetY1 + 2.0 * target1_y0;
+                  targetX1 = targetX1 - direction * 2.0 * target1_x0;
+                  targetY1 = targetY1 - direction * 2.0 * target1_y0;
 
-                  targetX2 = targetX2 + 2.0 * target2_x0;
-                  targetY2 = targetY2 + 2.0 * target2_y0;
+                  targetX2 = targetX2 - direction * 2.0 * target2_x0;
+                  targetY2 = targetY2 - direction * 2.0 * target2_y0;
 
                   swarmState++;
                   for (robot=0; robot < robots; ++robot) {
