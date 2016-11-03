@@ -269,8 +269,8 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 
-	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720/1.5);
-	cap.set(CV_CAP_PROP_FRAME_WIDTH, 720*1.6/1.5);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
 
 	cout << "Camera opened" << endl;
 	while(true){
