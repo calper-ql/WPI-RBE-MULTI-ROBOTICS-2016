@@ -86,14 +86,19 @@ struct FieldData {
 };
 
 class FieldComputer {
+private:
 	bool verbose;
 	std::string ip;
+private:
+	FieldData recieveFieldData(int sockfd);
+
 public:
 	FieldComputer(std::string ip);
 	FieldData getFieldData();
+	FieldData getFieldData(std::vector<int> forIds);
 	void arcadeDrive(int id, float speed, float sway);
-  void openGripper(int id);
-  void closeGripper(int id);
+  	void openGripper(int id);
+  	void closeGripper(int id);
 	void enableVerbose();
 	void disableVerbose();
 };
@@ -198,6 +203,46 @@ FieldComputer::FieldComputer(std::string ip){
 	disableVerbose();
 }
 
+FieldData FieldComputer::getFieldData(std::vector<int> forIds) {
+	if (verbose) {
+		std::cout << "Requested field update for ";
+		const char* separator = "";
+		for (auto id : forIds) {
+			std::cout << separator << id;
+			separator = ", ";
+		}
+		std::cout << std::endl;
+	}
+	if (forIds.size() == 0) {
+		return getFieldData();
+	}
+	FieldData data;
+
+	int sockfd = NetUtil::getClientSocket(ip.c_str());
+	if (sockfd < 0) {
+		if (verbose) {
+			std::cout << "FieldComputer could not be reached..." << std::endl;
+			return data;
+		}
+	}
+
+	std::string send_buffer = "UPDATE_ENTITIES\n";
+	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	send_buffer.clear();
+
+	std::stringstream strStream;
+	for (auto id : forIds) {
+		strStream << " " << id;
+	}
+	strStream << std::endl;
+
+	send_buffer = strStream.str();
+	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	data = recieveFieldData(sockfd);
+	close(sockfd);
+	return data;
+}
+
 FieldData FieldComputer::getFieldData(){
 	if(verbose)std::cout << "Requested field update" << std::endl;
 	FieldData data;
@@ -210,9 +255,15 @@ FieldData FieldComputer::getFieldData(){
 
 	std::string send_buffer = "UPDATE\n";
 	write(sockfd, send_buffer.c_str(), send_buffer.size());
+	data = recieveFieldData(sockfd);
+    close(sockfd);
+	return data;
+}
 
+FieldData FieldComputer::recieveFieldData(int sockfd) {
 	char recieve_char;
 	std::string receive_buffer;
+	FieldData data;
 	while(true){
 		receive_buffer = NetUtil::readFromSocket(sockfd);
 		if (receive_buffer.empty()) break;
@@ -247,7 +298,6 @@ FieldData FieldComputer::getFieldData(){
 			if(verbose)std::cout << "FieldComputer parser fail" << std::endl;
 		}
 	}
-    close(sockfd);
 	return data;
 }
 
