@@ -2,6 +2,7 @@
 #include <sstream>
 #include <thread>
 #include <mutex>
+#include <iterator>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -19,6 +20,7 @@ using namespace std;
 using namespace cv;
 
 #define ENTITY_STARTING_INDEX 100
+#define CORNER_STARTING_INDEX 200
 #define PI 3.1415926535
 
 /* Mutex for the data sanity */
@@ -180,7 +182,40 @@ void attendClient(int connfd, vector<Robot> robots, vector<Entity> entities){
 			send_buffer.append("\n");
 		}
 		write(connfd, send_buffer.c_str(), send_buffer.size());
-	}else if(receive_buffer.compare("GRIPPER") == 0){
+	} else if(receive_buffer.compare("UPDATE_ENTITIES") == 0) {
+		receive_buffer = NetUtil::readFromSocket(connfd);
+		stringstream parser(receive_buffer);
+		stringstream display;
+		const char * separator = "";
+		vector<int> updates(istream_iterator<int>(parser), {});
+
+		display << ipstr << ":" << port << " requested update for ";
+		string send_buffer;
+		for (unsigned i = 0; i < updates.size(); i++) {
+			int id = updates[i];
+			display << separator << id;
+			separator = ", ";
+			if (id < ENTITY_STARTING_INDEX) {
+				for (unsigned j = 0; j < robots.size(); j++) {
+					if (id == robots[j].id()) {
+						send_buffer.append(robots[i].toStr());
+						send_buffer.append("\n");
+						break;
+					}
+				}
+			} else {
+				for (unsigned j = 0; j < entities.size(); j++) {
+					if (id == entities[j].id()) {
+						send_buffer.append(entities[j].toStr());
+						send_buffer.append("\n");
+						break;
+					}
+				}
+			}
+		}
+		cout << display.str() << endl;
+		write(connfd, send_buffer.c_str(), send_buffer.size());
+	} else if(receive_buffer.compare("GRIPPER") == 0){
 		receive_buffer = NetUtil::readFromSocket(connfd);
 		stringstream parser(receive_buffer);
 		int id;
