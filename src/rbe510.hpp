@@ -19,6 +19,7 @@ private:
 public:
 	Entity();
 	Entity(int id);
+    Entity(const Entity& other);    
 	virtual ~Entity();
 
 	// Getter functions
@@ -47,7 +48,9 @@ class Robot : public Entity {
 private:
 
 public:
+    Robot();
 	Robot(int id);
+    Robot(const Robot& other);
 	virtual ~Robot();
 	std::string toStr();
 };
