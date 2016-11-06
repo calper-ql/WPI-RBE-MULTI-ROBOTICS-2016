@@ -10,6 +10,16 @@ Entity::Entity(int id){
 	init();
 }
 
+Entity::Entity(const Entity &other) {
+    this->_id = other._id;
+    set_x(other._x);
+    set_y(other._y);
+    set_theta(other._theta);
+    set_height(other._height);
+    set_width(other._width);
+    set_field_status(other._is_on_field);
+}
+
 void Entity::init(){
 	set_x(0.0);
 	set_y(0.0);
@@ -333,8 +343,15 @@ std::string NetUtil::readFromSocket(int connfd){
 	return receive_buffer;
 }
 
+Robot::Robot() : Entity() {
+
+}
 
 Robot::Robot(int id) : Entity(id){
+
+}
+
+Robot::Robot(const Robot &other): Entity(other) {
 
 }
 
