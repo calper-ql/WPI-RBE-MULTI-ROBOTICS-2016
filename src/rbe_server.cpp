@@ -2,6 +2,7 @@
 #include <sstream>
 #include <thread>
 #include <mutex>
+#include <iterator>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -19,6 +20,7 @@ using namespace std;
 using namespace cv;
 
 #define ENTITY_STARTING_INDEX 100
+#define CORNER_STARTING_INDEX 200
 #define PI 3.1415926535
 
 /* Mutex for the data sanity */
@@ -180,7 +182,40 @@ void attendClient(int connfd, vector<Robot> robots, vector<Entity> entities){
 			send_buffer.append("\n");
 		}
 		write(connfd, send_buffer.c_str(), send_buffer.size());
-	}else if(receive_buffer.compare("GRIPPER") == 0){
+	} else if(receive_buffer.compare("UPDATE_ENTITIES") == 0) {
+		receive_buffer = NetUtil::readFromSocket(connfd);
+		stringstream parser(receive_buffer);
+		stringstream display;
+		const char * separator = "";
+		vector<int> updates(istream_iterator<int>(parser), {});
+
+		display << ipstr << ":" << port << " requested update for ";
+		string send_buffer;
+		for (unsigned i = 0; i < updates.size(); i++) {
+			int id = updates[i];
+			display << separator << id;
+			separator = ", ";
+			if (id < ENTITY_STARTING_INDEX) {
+				for (unsigned j = 0; j < robots.size(); j++) {
+					if (id == robots[j].id()) {
+						send_buffer.append(robots[i].toStr());
+						send_buffer.append("\n");
+						break;
+					}
+				}
+			} else {
+				for (unsigned j = 0; j < entities.size(); j++) {
+					if (id == entities[j].id()) {
+						send_buffer.append(entities[j].toStr());
+						send_buffer.append("\n");
+						break;
+					}
+				}
+			}
+		}
+		cout << display.str() << endl;
+		write(connfd, send_buffer.c_str(), send_buffer.size());
+	} else if(receive_buffer.compare("GRIPPER") == 0){
 		receive_buffer = NetUtil::readFromSocket(connfd);
 		stringstream parser(receive_buffer);
 		int id;
@@ -221,6 +256,10 @@ Point2f dstCorners[4];
 
 Mat trans = Mat::eye(3,3,CV_64F);
 int updateTransFlag =1;
+bool flag_TL = 0;
+bool flag_TR = 0;
+bool flag_BR = 0;
+bool flag_BL = 0;
 void updateCorners(int id,Point2f center)
 {
 #define TL 200
@@ -228,50 +267,41 @@ void updateCorners(int id,Point2f center)
 #define BR 203
 #define BL 201
 	Point2f dstPt[4];
-	//corners[3] = Point2f(42.5, 411.75);
-	//corners[2] = Point2f(780.25, 337);
-	//corners[1] = Point2f(697.5, 36.5);
-	//corners[0] = Point2f(69.25, 100);
-	//trans = getPerspectiveTransform(corners,dstCorners);
-	//updateTransFlag =0;
-
+	cout<<updateTransFlag<<"\n";
 	if(id == TL)
 	{
 		corners[0] = center;
-		cout<<center<<endl;
-		updateTransFlag*=2;
+		flag_TL = 1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=2;
 	}
 	else if(id == TR)
 	{
 		corners[1] = center;
-		cout<<center<<endl;
-		updateTransFlag*=3;
+		flag_TR =1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=3;
 	}
 	else if(id == BR)
 	{
 		corners[2] = center;
-		cout<<center<<endl;
-		updateTransFlag*=5;
+		flag_BR = 1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=5;
 	}
 	else if(id == BL)
 	{
 		corners[3] = center;
-		cout<<center<<endl;
-		updateTransFlag*=7;
+		flag_BL = 1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=7;
 	}
-	if(updateTransFlag == 210)
+	if(flag_TL & flag_TR & flag_BR &flag_BL)
 	{
-		trans = getPerspectiveTransform(corners,dstCorners);
+		trans = getPerspectiveTransform(corners,dstCorners)*trans;
 		updateTransFlag =0;
+		cout<<"Appying Corner Corrections\n";
 	}
-
-
-		//Point2f srcPt[4];
-
-
-
-
-
 }
 
 /* Updates the database */
@@ -329,23 +359,23 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 
-	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720/1.5);
-	cap.set(CV_CAP_PROP_FRAME_WIDTH, 720*1.6/1.5);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
 
-
-
-	cout<<trans.rows<<","<<trans.cols<<","<<trans.TYPE_MASK<<endl;
 	cout << "Camera opened" << endl;
 	Mat inputImage;
-	cap >> inputImage;
-	dstCorners[3] = Point2f(0,inputImage.rows);
-	dstCorners[2] = Point2f(inputImage.cols,inputImage.rows);
-	dstCorners[1] = Point2f(inputImage.cols,0);
-	dstCorners[0] = Point2f(0,0);
-	while(true){
-
 		cap >> inputImage;
-		warpPerspective(inputImage,inputImage,trans,inputImage.size());
+		dstCorners[3] = Point2f(0,inputImage.rows);
+		dstCorners[2] = Point2f(inputImage.cols,inputImage.rows);
+		dstCorners[1] = Point2f(inputImage.cols,0);
+		dstCorners[0] = Point2f(0,0);
+
+
+		cout<<inputImage.cols<<","<<inputImage.rows<<endl;
+	while(true){
+		cap >> inputImage;
+		//warpPerspective(inputImage,inputImage,trans,inputImage.size());
+		warpPerspective(inputImage,inputImage,trans,cvSize(2320,1100));
 		if(!inputImage.empty()){
 			vector<int> markerIds;
 			vector< vector<Point2f> > markerCorners;
