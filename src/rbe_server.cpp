@@ -2,7 +2,6 @@
 #include <sstream>
 #include <thread>
 #include <mutex>
-#include <iterator>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -20,7 +19,6 @@ using namespace std;
 using namespace cv;
 
 #define ENTITY_STARTING_INDEX 100
-#define CORNER_STARTING_INDEX 200
 #define PI 3.1415926535
 
 /* Mutex for the data sanity */
@@ -182,40 +180,7 @@ void attendClient(int connfd, vector<Robot> robots, vector<Entity> entities){
 			send_buffer.append("\n");
 		}
 		write(connfd, send_buffer.c_str(), send_buffer.size());
-	} else if(receive_buffer.compare("UPDATE_ENTITIES") == 0) {
-		receive_buffer = NetUtil::readFromSocket(connfd);
-		stringstream parser(receive_buffer);
-		stringstream display;
-		const char * separator = "";
-		vector<int> updates(istream_iterator<int>(parser), {});
-
-		display << ipstr << ":" << port << " requested update for ";
-		string send_buffer;
-		for (unsigned i = 0; i < updates.size(); i++) {
-			int id = updates[i];
-			display << separator << id;
-			separator = ", ";
-			if (id < ENTITY_STARTING_INDEX) {
-				for (unsigned j = 0; j < robots.size(); j++) {
-					if (id == robots[j].id()) {
-						send_buffer.append(robots[i].toStr());
-						send_buffer.append("\n");
-						break;
-					}
-				}
-			} else {
-				for (unsigned j = 0; j < entities.size(); j++) {
-					if (id == entities[j].id()) {
-						send_buffer.append(entities[j].toStr());
-						send_buffer.append("\n");
-						break;
-					}
-				}
-			}
-		}
-		cout << display.str() << endl;
-		write(connfd, send_buffer.c_str(), send_buffer.size());
-	} else if(receive_buffer.compare("GRIPPER") == 0){
+	}else if(receive_buffer.compare("GRIPPER") == 0){
 		receive_buffer = NetUtil::readFromSocket(connfd);
 		stringstream parser(receive_buffer);
 		int id;
@@ -251,6 +216,64 @@ void network(vector<Robot> &robots, vector<Entity> &entities){
 	}
 }
 
+Point2f corners[4];
+Point2f dstCorners[4];
+
+Mat trans = Mat::eye(3,3,CV_64F);
+int updateTransFlag =1;
+void updateCorners(int id,Point2f center)
+{
+#define TL 200
+#define TR 202
+#define BR 203
+#define BL 201
+	Point2f dstPt[4];
+	//corners[3] = Point2f(42.5, 411.75);
+	//corners[2] = Point2f(780.25, 337);
+	//corners[1] = Point2f(697.5, 36.5);
+	//corners[0] = Point2f(69.25, 100);
+	//trans = getPerspectiveTransform(corners,dstCorners);
+	//updateTransFlag =0;
+
+	if(id == TL)
+	{
+		corners[0] = center;
+		cout<<center<<endl;
+		updateTransFlag*=2;
+	}
+	else if(id == TR)
+	{
+		corners[1] = center;
+		cout<<center<<endl;
+		updateTransFlag*=3;
+	}
+	else if(id == BR)
+	{
+		corners[2] = center;
+		cout<<center<<endl;
+		updateTransFlag*=5;
+	}
+	else if(id == BL)
+	{
+		corners[3] = center;
+		cout<<center<<endl;
+		updateTransFlag*=7;
+	}
+	if(updateTransFlag == 210)
+	{
+		trans = getPerspectiveTransform(corners,dstCorners);
+		updateTransFlag =0;
+	}
+
+
+		//Point2f srcPt[4];
+
+
+
+
+
+}
+
 /* Updates the database */
 void update( vector<int> markerIds, vector< vector<Point2f> > markerCorners) {
 	mtx.lock();
@@ -258,6 +281,8 @@ void update( vector<int> markerIds, vector< vector<Point2f> > markerCorners) {
 	entities.clear();
 	for(unsigned i = 0; i < markerIds.size(); i++){
 		Point2f center = findSquareCenter(markerCorners[i]);
+		if(updateTransFlag!=0)
+			updateCorners(markerIds[i],center);
 		Point2f mp = midPoint(markerCorners[i][0], markerCorners[i][1]);
 		Point2f mp2 = midPoint(markerCorners[i][1], markerCorners[i][2]);
 		float theta = atan2(center.y - mp.y, center.x - mp.x);
@@ -304,13 +329,23 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 
-	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
-	cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720/1.5);
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, 720*1.6/1.5);
 
+
+
+	cout<<trans.rows<<","<<trans.cols<<","<<trans.TYPE_MASK<<endl;
 	cout << "Camera opened" << endl;
+	Mat inputImage;
+	cap >> inputImage;
+	dstCorners[3] = Point2f(0,inputImage.rows);
+	dstCorners[2] = Point2f(inputImage.cols,inputImage.rows);
+	dstCorners[1] = Point2f(inputImage.cols,0);
+	dstCorners[0] = Point2f(0,0);
 	while(true){
-		Mat inputImage;
+
 		cap >> inputImage;
+		warpPerspective(inputImage,inputImage,trans,inputImage.size());
 		if(!inputImage.empty()){
 			vector<int> markerIds;
 			vector< vector<Point2f> > markerCorners;
