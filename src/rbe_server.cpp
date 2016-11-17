@@ -251,6 +251,59 @@ void network(vector<Robot> &robots, vector<Entity> &entities){
 	}
 }
 
+Point2f corners[4];
+Point2f dstCorners[4];
+
+Mat trans = Mat::eye(3,3,CV_64F);
+int updateTransFlag =1;
+bool flag_TL = 0;
+bool flag_TR = 0;
+bool flag_BR = 0;
+bool flag_BL = 0;
+void updateCorners(int id,Point2f center)
+{
+#define TL 200
+#define TR 202
+#define BR 203
+#define BL 201
+	Point2f dstPt[4];
+	cout<<updateTransFlag<<"\n";
+	if(id == TL)
+	{
+		corners[0] = center;
+		flag_TL = 1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=2;
+	}
+	else if(id == TR)
+	{
+		corners[1] = center;
+		flag_TR =1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=3;
+	}
+	else if(id == BR)
+	{
+		corners[2] = center;
+		flag_BR = 1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=5;
+	}
+	else if(id == BL)
+	{
+		corners[3] = center;
+		flag_BL = 1;
+		//cout<<center<<endl;
+		//if(updateTransFlag%2 !=0)updateTransFlag*=7;
+	}
+	if(flag_TL & flag_TR & flag_BR &flag_BL)
+	{
+		trans = getPerspectiveTransform(corners,dstCorners)*trans;
+		updateTransFlag =0;
+		cout<<"Appying Corner Corrections\n";
+	}
+}
+
 /* Updates the database */
 void update( vector<int> markerIds, vector< vector<Point2f> > markerCorners) {
 	mtx.lock();
@@ -258,6 +311,8 @@ void update( vector<int> markerIds, vector< vector<Point2f> > markerCorners) {
 	entities.clear();
 	for(unsigned i = 0; i < markerIds.size(); i++){
 		Point2f center = findSquareCenter(markerCorners[i]);
+		if(updateTransFlag!=0)
+			updateCorners(markerIds[i],center);
 		Point2f mp = midPoint(markerCorners[i][0], markerCorners[i][1]);
 		Point2f mp2 = midPoint(markerCorners[i][1], markerCorners[i][2]);
 		float theta = atan2(center.y - mp.y, center.x - mp.x);
@@ -308,9 +363,19 @@ int main(int argc, char* argv[]){
 	cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
 
 	cout << "Camera opened" << endl;
-	while(true){
-		Mat inputImage;
+	Mat inputImage;
 		cap >> inputImage;
+		dstCorners[3] = Point2f(50,inputImage.rows-50);
+		dstCorners[2] = Point2f(inputImage.cols-50,inputImage.rows-50);
+		dstCorners[1] = Point2f(inputImage.cols-50,50);
+		dstCorners[0] = Point2f(50,50);
+
+
+		cout<<inputImage.cols<<","<<inputImage.rows<<endl;
+	while(true){
+		cap >> inputImage;
+		//warpPerspective(inputImage,inputImage,trans,inputImage.size());
+		warpPerspective(inputImage,inputImage,trans,cvSize(2320,1100));
 		if(!inputImage.empty()){
 			vector<int> markerIds;
 			vector< vector<Point2f> > markerCorners;
