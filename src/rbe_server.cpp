@@ -365,10 +365,10 @@ int main(int argc, char* argv[]){
 	cout << "Camera opened" << endl;
 	Mat inputImage;
 		cap >> inputImage;
-		dstCorners[3] = Point2f(0,inputImage.rows);
-		dstCorners[2] = Point2f(inputImage.cols,inputImage.rows);
-		dstCorners[1] = Point2f(inputImage.cols,0);
-		dstCorners[0] = Point2f(0,0);
+		dstCorners[3] = Point2f(50,inputImage.rows-50);
+		dstCorners[2] = Point2f(inputImage.cols-50,inputImage.rows-50);
+		dstCorners[1] = Point2f(inputImage.cols-50,50);
+		dstCorners[0] = Point2f(50,50);
 
 
 		cout<<inputImage.cols<<","<<inputImage.rows<<endl;
